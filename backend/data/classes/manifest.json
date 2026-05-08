@@ -1,0 +1,10 @@
+[
+  {
+    "id": "ford_ranger_au",
+    "label": "Ford Ranger (Australia)",
+    "make": "Ford",
+    "model": "Ranger",
+    "market": "Australia",
+    "file": "vehicle_classes.json"
+  }
+]

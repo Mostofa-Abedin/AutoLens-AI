@@ -1,0 +1,25 @@
+# Future upgrade: Qdrant vector store + PostgreSQL
+version: '3.8'
+
+services:
+  qdrant:
+    image: qdrant/qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: autolens
+      POSTGRES_USER: autolens
+      POSTGRES_PASSWORD: autolens
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  qdrant_data:
+  postgres_data:

@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoLens AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg0: #f4f4f6; --bg1: #ffffff; --bg2: #f0f0f3; --bg3: #e8e8ed;
+      --border: #dcdce4; --border2: #c4c4d0;
+      --text0: #111118; --text1: #38383f; --text2: #5a5a66; --text3: #9898a6;
+      --green: #1a7a4a; --green-bg: #e6f5ee;
+      --amber: #a06000; --amber-bg: #fff4e0;
+      --red: #c0340e;   --red-bg: #fdeee9;
+      --blue: #1a5fb4;  --blue-bg: #e8f0fb;
+      --accent: #c0340e;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; background: var(--bg0); color: var(--text0); display: flex; flex-direction: column; }
+
+    /* ── App nav ── */
+    .app-nav { display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--bg1); border-bottom:1px solid var(--border); flex-shrink:0; }
+    .app-nav-brand { font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:500; letter-spacing:0.1em; color:var(--text2); margin-right:8px; }
+    .nav-btn { padding:5px 14px; border:1px solid var(--border2); border-radius:4px; background:none; cursor:pointer; font-size:12px; font-family:'IBM Plex Sans',sans-serif; color:var(--text2); transition:all 0.12s; }
+    .nav-btn:hover { background:var(--bg2); color:var(--text0); }
+    .nav-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+
+    /* ── Layout ── */
+    .app { display: flex; flex: 1; overflow: hidden; }
+    .col { display: flex; flex-direction: column; overflow: hidden; background: var(--bg1); }
+    .col-explorer { width: 320px; flex-shrink: 0; border-right: 1px solid var(--border); }
+    .col-analysis  { flex: 1; background: var(--bg0); }
+    .col-session   { width: 300px; flex-shrink: 0; border-left: 1px solid var(--border); }
+
+    .col-header { padding: 11px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; color: var(--text3); border-bottom: 1px solid var(--border); background: var(--bg2); flex-shrink: 0; }
+
+    /* ── Source tabs ── */
+    .source-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg2); flex-shrink: 0; }
+    .source-tab { flex: 1; padding: 8px 2px; border: none; background: none; cursor: pointer; font-size: 11px; color: var(--text2); border-bottom: 2px solid transparent; font-family: 'IBM Plex Sans', sans-serif; transition: color 0.12s; }
+    .source-tab:hover { color: var(--text0); }
+    .source-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+    .tab-pane { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .tab-pane.active { display: flex; }
+
+    /* ── Path row ── */
+    .path-row { display: flex; gap: 6px; padding: 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .path-row input { flex: 1; padding: 6px 8px; border: 1px solid var(--border2); border-radius: 4px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; background: var(--bg1); color: var(--text0); }
+    .path-row input:focus { outline: none; border-color: var(--accent); }
+    .img-count { padding: 4px 12px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--text3); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+
+    /* ── Tree ── */
+    .tree-container { flex: 1; overflow-y: auto; padding: 4px 0; }
+    ul.tree, ul.tree ul { list-style: none; padding: 0; margin: 0; }
+    ul.tree ul { padding-left: 14px; }
+    .tree-folder-row { display: flex; align-items: center; gap: 5px; padding: 5px 10px; cursor: pointer; user-select: none; }
+    .tree-folder-row:hover { background: var(--bg2); }
+    .tree-arrow { font-size: 9px; color: var(--text3); transition: transform 0.15s; width: 10px; display: inline-block; }
+    .tree-arrow.open { transform: rotate(90deg); }
+    .folder-name { flex: 1; font-size: 12px; color: var(--text1); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .count-badge { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--text3); background: var(--bg3); padding: 1px 5px; border-radius: 8px; flex-shrink: 0; }
+    .tree-children { display: none; }
+    .tree-children.open { display: block; }
+    .tree-image-row { display: flex; align-items: center; gap: 8px; padding: 3px 10px; cursor: pointer; }
+    .tree-image-row:hover { background: var(--bg2); }
+    .tree-image-row.selected { background: var(--red-bg); border-left: 2px solid var(--accent); padding-left: 8px; }
+    .tree-thumb { width: 38px; height: 38px; object-fit: cover; border-radius: 3px; border: 1px solid var(--border); flex-shrink: 0; }
+    .tree-filename { font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--text1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ── Placeholder panes ── */
+    .placeholder-pane { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; color: var(--text3); font-size: 13px; gap: 8px; }
+    .placeholder-pane .sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.05em; }
+
+    /* ── Analysis column ── */
+    .analysis-scroll { height: 100%; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+    .panel { background: var(--bg1); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .panel-header { padding: 7px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; color: var(--text3); background: var(--bg2); border-bottom: 1px solid var(--border); }
+    .panel-body { padding: 14px; }
+
+    /* ── Image preview ── */
+    .preview-area { display: flex; align-items: center; justify-content: center; min-height: 160px; max-height: 400px; background: var(--bg2); border-radius: 4px; overflow: hidden; }
+    .preview-area img { max-height: 400px; max-width: 100%; object-fit: contain; }
+    .preview-empty { color: var(--text3); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .preview-filename { margin-top: 7px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--text2); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ── Prompt panel ── */
+    .prompt-top { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; }
+    .prompt-top select { flex: 1; padding: 6px 8px; border: 1px solid var(--border2); border-radius: 4px; font-size: 13px; background: var(--bg1); color: var(--text0); }
+    .prompt-name-row { margin-bottom: 8px; }
+    .prompt-name-row input { width: 100%; padding: 6px 8px; border: 1px solid var(--border2); border-radius: 4px; font-size: 13px; background: var(--bg1); color: var(--text0); }
+    .prompt-name-row input:focus { outline: none; border-color: var(--accent); }
+    .prompt-actions { display: flex; gap: 6px; margin-top: 8px; }
+    textarea { width: 100%; padding: 8px; border: 1px solid var(--border2); border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.6; background: var(--bg1); color: var(--text0); resize: vertical; }
+    textarea:focus { outline: none; border-color: var(--accent); }
+    textarea[readonly] { background: var(--bg2); color: var(--text1); cursor: default; }
+
+    /* ── Buttons ── */
+    .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; transition: opacity 0.12s; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { opacity: 0.85; }
+    .btn-secondary { background: var(--bg3); color: var(--text1); border: 1px solid var(--border2); }
+    .btn-secondary:hover:not(:disabled) { background: var(--border); }
+    .btn-ghost { background: none; color: var(--text2); border: 1px solid var(--border2); }
+    .btn-ghost:hover:not(:disabled) { background: var(--bg2); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* ── Mode + Model ── */
+    .mode-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .mode-label { font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--text2); letter-spacing: 0.05em; }
+    .mode-toggle { display: flex; border: 1px solid var(--border2); border-radius: 20px; overflow: hidden; }
+    .mode-btn { padding: 4px 16px; border: none; background: none; cursor: pointer; font-size: 12px; color: var(--text2); font-family: 'IBM Plex Sans', sans-serif; }
+    .mode-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
+    .rag-note { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--text3); }
+    .form-field { margin-bottom: 10px; }
+    .form-field label { display: block; font-size: 10px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.07em; color: var(--text2); margin-bottom: 4px; }
+    .form-field select, .form-field input[type="text"], .form-field input[type="password"] { width: 100%; padding: 7px 10px; border: 1px solid var(--border2); border-radius: 4px; font-size: 13px; background: var(--bg1); color: var(--text0); }
+    .form-field select:focus, .form-field input:focus { outline: none; border-color: var(--accent); }
+    .apikey-wrap { position: relative; }
+    .apikey-wrap input { padding-right: 36px; }
+    .apikey-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text3); font-size: 13px; }
+    .analyze-btn { width: 100%; margin-top: 14px; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: 5px; font-size: 15px; font-weight: 600; font-family: 'IBM Plex Sans', sans-serif; cursor: pointer; transition: opacity 0.12s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .analyze-btn:hover:not(:disabled) { opacity: 0.86; }
+    .analyze-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.65s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-banner { margin-top: 8px; padding: 9px 12px; background: var(--red-bg); border: 1px solid #f0bfb0; border-radius: 4px; color: var(--red); font-size: 12px; }
+
+    /* ── Result ── */
+    .result-empty { color: var(--text3); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+    .result-class-id { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500; color: var(--text0); word-break: break-all; }
+    .result-class-label { font-size: 13px; color: var(--text2); margin-top: 3px; margin-bottom: 12px; }
+    .conf-row { display: flex; align-items: center; gap: 10px; }
+    .conf-track { flex: 1; height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+    .conf-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+    .conf-chip { font-size: 11px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; padding: 2px 9px; border-radius: 4px; min-width: 62px; text-align: center; }
+    .conf-pct { font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: var(--text2); }
+    .features-label { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--text3); letter-spacing: 0.07em; margin: 12px 0 6px; }
+    .features-list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .feature-chip { font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--text1); background: var(--bg2); border: 1px solid var(--border); border-radius: 3px; padding: 2px 7px; }
+
+    /* ── Session column ── */
+    .session-scroll { flex: 1; overflow-y: auto; }
+    .sess-section { padding: 14px; border-bottom: 1px solid var(--border); }
+    .sess-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 10px; }
+
+    /* Accuracy display */
+    .accuracy-big { font-family: 'IBM Plex Mono', monospace; font-size: 42px; font-weight: 500; text-align: center; line-height: 1; margin: 6px 0 10px; }
+    .accuracy-big.acc-good   { color: var(--green); }
+    .accuracy-big.acc-medium { color: var(--amber); }
+    .accuracy-big.acc-bad    { color: var(--red); }
+    .accuracy-big.acc-none   { color: var(--text3); }
+    .sess-progress-track { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+    .sess-progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+    .sess-counts { font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: var(--text2); text-align: center; }
+
+    /* Per-class breakdown */
+    .class-row { display: grid; grid-template-columns: 1fr 28px 80px; align-items: center; gap: 6px; margin-bottom: 7px; }
+    .class-name { font-size: 11px; color: var(--text1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .class-n { font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--text3); text-align: right; }
+    .class-bar-wrap { display: flex; align-items: center; gap: 4px; }
+    .class-bar-track { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+    .class-bar-fill { height: 100%; border-radius: 3px; }
+    .class-pct { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--text2); width: 28px; text-align: right; flex-shrink: 0; }
+
+    /* Session action buttons */
+    .sess-actions { display: flex; gap: 6px; }
+
+    /* ── Feedback panel ── */
+    .feedback-predicted { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text1); background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; padding: 8px 10px; margin-bottom: 10px; line-height: 1.7; }
+    .choice-btns { display: flex; gap: 8px; margin-bottom: 10px; }
+    .choice-btn { flex: 1; padding: 8px; border: 1px solid var(--border2); border-radius: 5px; background: none; cursor: pointer; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; color: var(--text2); transition: all 0.12s; }
+    .choice-btn:hover { background: var(--bg2); }
+    .choice-btn.chosen-correct { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+    .choice-btn.chosen-wrong   { background: var(--red-bg);   border-color: var(--red);   color: var(--red); }
+    .wrong-class-wrap { margin-bottom: 10px; }
+    .wrong-class-wrap label { display: block; font-size: 10px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.07em; color: var(--text2); margin-bottom: 4px; }
+    .wrong-class-wrap select { width: 100%; padding: 7px 10px; border: 1px solid var(--border2); border-radius: 4px; font-size: 13px; background: var(--bg1); color: var(--text0); }
+    .feedback-submitted { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--green); }
+    .feedback-submitted::before { content: "✓"; font-size: 16px; }
+
+    /* ── Drop zone ── */
+    .drop-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed var(--border2); margin: 12px; border-radius: 8px; cursor: pointer; color: var(--text3); font-size: 13px; gap: 6px; transition: border-color 0.15s, background 0.15s; }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: var(--red-bg); color: var(--accent); }
+    .drop-zone .drop-icon { font-size: 34px; }
+    .drop-zone .sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.05em; }
+    .drop-loaded { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .drop-preview-wrap { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg2); overflow: hidden; }
+    .drop-preview-wrap img { max-height: 100%; max-width: 100%; object-fit: contain; }
+    .drop-file-info { padding: 8px 12px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--text2); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+
+    /* ── Similar images ── */
+    .similar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .sim-card { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; cursor: default; }
+    .sim-thumb-wrap { position: relative; aspect-ratio: 1; background: var(--bg2); }
+    .sim-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sim-badge { position: absolute; bottom: 3px; right: 3px; font-size: 9px; font-family: 'IBM Plex Mono', monospace; font-weight: 500; padding: 1px 4px; border-radius: 3px; }
+    .sim-badge.sim-good   { background: var(--green-bg); color: var(--green); }
+    .sim-badge.sim-medium { background: var(--amber-bg); color: var(--amber); }
+    .sim-badge.sim-bad    { background: var(--red-bg);   color: var(--red);   }
+    .sim-label { font-size: 9px; font-family: 'IBM Plex Mono', monospace; color: var(--text2); padding: 3px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--bg1); }
+
+    /* ── Responsive ── */
+    @media (max-width: 1200px) { .col-session { display: none; } }
+    @media (max-width: 768px) {
+      .app { flex-direction: column; height: auto; min-height: 100vh; }
+      .col-explorer { width: 100%; border-right: none; border-bottom: 1px solid var(--border); height: 50vh; }
+      .col-analysis { overflow: visible; }
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    .hidden { display: none !important; }
+    select { cursor: pointer; }
+
+    /* ── Classes view ── */
+    .classes-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .classes-table th { text-align:left; padding:7px 10px; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.07em; color:var(--text3); background:var(--bg2); border-bottom:1px solid var(--border); font-weight:500; }
+    .classes-table td { padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+    .classes-table tr:last-child td { border-bottom:none; }
+    .classes-table tbody tr:hover td { background:var(--bg2); }
+    .class-editor { background:var(--bg1); border:1px solid var(--border); border-radius:6px; padding:16px; margin-top:12px; }
+    .class-editor h3 { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.1em; color:var(--text3); margin-bottom:14px; }
+    .editor-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; }
+    .editor-full { grid-column:1/-1; }
+    .editor-field label { display:block; font-size:10px; font-weight:500; font-family:'IBM Plex Mono',monospace; letter-spacing:0.07em; color:var(--text2); margin-bottom:4px; }
+    .editor-field input[type="text"] { width:100%; padding:6px 8px; border:1px solid var(--border2); border-radius:4px; font-size:13px; background:var(--bg1); color:var(--text0); }
+    .editor-field input:focus { outline:none; border-color:var(--accent); }
+    .editor-field textarea { font-size:12px; min-height:80px; }
+    .tog-btn { padding:2px 7px; border-radius:3px; border:1px solid; cursor:pointer; font-size:10px; font-family:'IBM Plex Mono',monospace; font-weight:500; margin-right:3px; transition:all 0.1s; }
+    .tog-on  { background:var(--green-bg); color:var(--green); border-color:#a0dbb8; }
+    .tog-off { background:var(--bg3); color:var(--text3); border-color:var(--border2); text-decoration:line-through; }
+  </style>
+</head>
+<body>
+<nav class="app-nav">
+  <span class="app-nav-brand">AUTOLENS AI</span>
+  <button onclick="switchView('evaluate')" id="nav-evaluate" class="nav-btn active">▶ Evaluate</button>
+  <button onclick="switchView('classes')"  id="nav-classes"  class="nav-btn">📋 Classes</button>
+</nav>
+
+<div class="app" id="view-evaluate">
+
+  <!-- ══ Column 1: Explorer ══ -->
+  <div class="col col-explorer">
+    <div class="col-header">EXPLORER</div>
+    <div class="source-tabs">
+      <button class="source-tab active" data-tab="local"  onclick="switchTab('local')">📂 Local</button>
+      <button class="source-tab"        data-tab="drop"   onclick="switchTab('drop')">⬆ Drop</button>
+      <button class="source-tab"        data-tab="drive"  onclick="switchTab('drive')">☁ Drive</button>
+      <button class="source-tab"        data-tab="url"    onclick="switchTab('url')">🔗 URL</button>
+    </div>
+    <div class="tab-pane active" id="tab-local">
+      <div class="path-row">
+        <input type="text" id="folder-path" placeholder="Paste a server path, or click Scan to browse…"
+               onkeydown="if(event.key==='Enter') scanFolder()">
+        <button class="btn btn-primary" id="scan-btn"
+                onclick="document.getElementById('folder-input').click()">Scan</button>
+      </div>
+      <input type="file" id="folder-input" webkitdirectory multiple style="display:none"
+             onchange="handleFolderPick(this.files)">
+      <div class="img-count hidden" id="img-count"></div>
+      <div class="tree-container" id="tree-container"></div>
+    </div>
+    <div class="tab-pane" id="tab-drop">
+      <div class="drop-zone" id="drop-zone"
+           onclick="document.getElementById('drop-file-input').click()"
+           ondragover="dropDragOver(event)" ondragleave="dropDragLeave(event)" ondrop="dropHandleDrop(event)">
+        <div class="drop-icon">⬆</div>
+        <div>Drop an image here</div>
+        <div class="sub">or click to browse · JPG PNG WebP BMP</div>
+      </div>
+      <div class="drop-loaded hidden" id="drop-loaded">
+        <div class="drop-preview-wrap"><img id="drop-preview-img" src="" alt=""></div>
+        <div class="drop-file-info">
+          <span id="drop-filename" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1"></span>
+          <button class="btn btn-ghost btn-sm" style="flex-shrink:0;margin-left:8px"
+                  onclick="dropReset()">✕ Clear</button>
+        </div>
+      </div>
+      <input type="file" id="drop-file-input" accept="image/*" style="display:none"
+             onchange="dropHandleFile(this.files[0])">
+    </div>
+    <div class="tab-pane" id="tab-drive">
+      <div style="padding:8px 10px;border-bottom:1px solid var(--border);flex-shrink:0">
+        <div style="font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.07em;color:var(--text2);margin-bottom:4px">DRIVE API KEY</div>
+        <div class="apikey-wrap" style="margin-bottom:8px">
+          <input type="password" id="drive-api-key" placeholder="Paste Google Drive API key"
+                 style="width:100%;padding:6px 36px 6px 8px;border:1px solid var(--border2);border-radius:4px;font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--bg1);color:var(--text0)">
+          <button class="apikey-toggle" onclick="toggleDriveKeyVis()" title="Show/hide">👁</button>
+        </div>
+        <div class="path-row" style="padding:0">
+          <input type="text" id="drive-folder-url" placeholder="Drive folder URL"
+                 onkeydown="if(event.key==='Enter') driveBrowse()">
+          <button class="btn btn-primary" id="drive-browse-btn" onclick="driveBrowse()">Browse</button>
+        </div>
+      </div>
+      <div class="img-count hidden" id="drive-img-count"></div>
+      <div class="tree-container" id="drive-list"></div>
+    </div>
+    <div class="tab-pane" id="tab-url">
+      <div class="path-row">
+        <input type="text" id="url-input" placeholder="https://example.com/car.jpg"
+               onkeydown="if(event.key==='Enter') fetchImageUrl()">
+        <button class="btn btn-primary" id="url-load-btn" onclick="fetchImageUrl()">Load</button>
+      </div>
+      <div class="hidden" id="url-error" style="padding:6px 12px;color:var(--red);font-size:12px;font-family:'IBM Plex Mono',monospace"></div>
+      <div class="placeholder-pane" id="url-placeholder">
+        <div style="font-size:30px">🔗</div>
+        <div>Enter an image URL above</div>
+        <div class="sub">JPG · PNG · WebP · BMP</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Column 2: Analysis ══ -->
+  <div class="col col-analysis">
+    <div class="analysis-scroll">
+
+      <div class="panel">
+        <div class="panel-header">IMAGE PREVIEW</div>
+        <div class="panel-body">
+          <div class="preview-area" id="preview-area">
+            <span class="preview-empty">No image selected</span>
+          </div>
+          <div class="preview-filename" id="preview-filename"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">PROMPT</div>
+        <div class="panel-body">
+          <div class="prompt-top">
+            <select id="prompt-select" onchange="onPromptSelect()"></select>
+            <button class="btn btn-ghost" onclick="newPrompt()">+ New</button>
+          </div>
+          <div class="prompt-name-row">
+            <input type="text" id="prompt-name" placeholder="Prompt name">
+          </div>
+          <textarea id="prompt-content" rows="9" placeholder="Enter prompt — use {CLASS_KNOWLEDGE_BASE} as placeholder"></textarea>
+          <div class="prompt-actions">
+            <button class="btn btn-secondary" onclick="savePrompt()">Save</button>
+            <button class="btn btn-ghost hidden" id="delete-prompt-btn" onclick="deletePrompt()">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">MODEL &amp; MODE</div>
+        <div class="panel-body">
+          <div class="mode-row">
+            <span class="mode-label">MODE</span>
+            <div class="mode-toggle">
+              <button class="mode-btn active" id="mode-cold" onclick="setMode('cold')">Cold</button>
+              <button class="mode-btn"        id="mode-rag"  onclick="setMode('rag')">RAG</button>
+            </div>
+          </div>
+          <!-- RAG index builder (visible only in RAG mode) -->
+          <div class="hidden" id="rag-panel" style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px;margin-bottom:10px">
+            <div style="font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.07em;color:var(--text2);margin-bottom:6px">INDEX</div>
+            <div id="index-status-line" style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text3);margin-bottom:8px">Checking…</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="text" id="index-dataset-path" placeholder="Dataset folder path"
+                     style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:4px;font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--bg1);color:var(--text0)">
+              <button class="btn btn-ghost btn-sm" title="Browse folder"
+                      onclick="document.getElementById('rag-folder-input').click()">📁</button>
+              <button class="btn btn-secondary btn-sm" id="index-build-btn" onclick="buildIndex()">Build</button>
+              <button class="btn btn-ghost btn-sm" id="index-clear-btn" onclick="clearIndex()" title="Clear index" style="color:var(--red)">✕</button>
+            </div>
+            <input type="file" id="rag-folder-input" webkitdirectory multiple style="display:none"
+                   onchange="handleRagFolderPick(this.files)">
+            <div id="rag-upload-progress" style="display:none;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text3);margin-top:6px"></div>
+            <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+              <button class="btn btn-ghost btn-sm" id="inspect-toggle-btn"
+                      onclick="toggleIndexInspect()" style="width:100%;text-align:left">▶ Inspect Index</button>
+              <div id="inspect-panel" style="display:none;margin-top:8px"></div>
+            </div>
+          </div>
+          <div class="form-field">
+            <label>MODEL</label>
+            <select id="model-select" onchange="onModelChange()"></select>
+          </div>
+          <div class="form-field" id="apikey-field">
+            <label id="apikey-label">API KEY <span id="key-saved-badge" class="hidden" style="font-size:9px;font-family:'IBM Plex Mono',monospace;background:var(--green-bg);color:var(--green);border:1px solid #a0dbb8;border-radius:3px;padding:1px 5px;margin-left:4px;letter-spacing:0">🔒 SAVED</span></label>
+            <div class="apikey-wrap">
+              <input type="password" id="api-key" placeholder="Paste API key">
+              <button class="apikey-toggle" onclick="toggleKeyVis()" title="Show/hide">👁</button>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:5px">
+              <button class="btn btn-secondary btn-sm" onclick="saveApiKey()">💾 Save Key</button>
+              <button class="btn btn-ghost btn-sm" id="clear-key-btn" onclick="clearApiKey()" style="display:none">🗑 Clear Saved</button>
+            </div>
+          </div>
+          <div class="form-field hidden" id="ollama-field">
+            <label>OLLAMA ENDPOINT</label>
+            <input type="text" id="ollama-endpoint" value="http://localhost:11434">
+          </div>
+          <button class="analyze-btn" id="analyze-btn" onclick="runStage1()">
+            <span id="analyze-label">▶ Identify Vehicle</span>
+          </button>
+          <div class="error-banner hidden" id="analyze-error"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">REASONING</div>
+        <div class="panel-body">
+          <textarea id="reasoning" rows="6" readonly placeholder="Reasoning appears here after analysis…"></textarea>
+        </div>
+      </div>
+
+      <div class="panel" id="stage1-panel" style="display:none">
+        <div class="panel-header">STAGE 1 — VEHICLE IDENTIFICATION</div>
+        <div class="panel-body" id="stage1-body"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">RESULT</div>
+        <div class="panel-body" id="result-body">
+          <div class="result-empty">Identify a vehicle first, then classify.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ Column 3: Session ══ -->
+  <div class="col col-session">
+    <div class="col-header">SESSION</div>
+    <div class="session-scroll">
+
+      <!-- Score -->
+      <div class="sess-section">
+        <div class="sess-label">ACCURACY</div>
+        <div class="accuracy-big acc-none" id="accuracy-pct">—</div>
+        <div class="sess-progress-track">
+          <div class="sess-progress-fill" id="sess-progress" style="width:0%"></div>
+        </div>
+        <div class="sess-counts" id="sess-counts">No results yet</div>
+      </div>
+
+      <!-- Per-class breakdown -->
+      <div class="sess-section hidden" id="class-breakdown">
+        <div class="sess-label">BY CLASS</div>
+        <div id="class-table"></div>
+      </div>
+
+      <!-- Similar images (RAG mode) -->
+      <div class="sess-section hidden" id="similar-section">
+        <div class="sess-label">SIMILAR IMAGES</div>
+        <div class="similar-grid" id="similar-grid"></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="sess-section sess-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportCsv()">↓ Export CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetSession()">↺ Reset</button>
+      </div>
+
+      <!-- Feedback -->
+      <div class="sess-section hidden" id="feedback-section">
+        <div class="sess-label">FEEDBACK</div>
+        <div class="feedback-predicted" id="feedback-predicted"></div>
+        <div class="choice-btns" id="choice-btns">
+          <button class="choice-btn" id="choice-correct" onclick="setFeedback('correct')">✓ Correct</button>
+          <button class="choice-btn" id="choice-wrong"   onclick="setFeedback('wrong')">✗ Wrong</button>
+        </div>
+        <div class="wrong-class-wrap hidden" id="wrong-class-wrap">
+          <label>ACTUAL CLASS WAS</label>
+          <select id="actual-class-select"></select>
+        </div>
+        <button class="btn btn-primary hidden" id="submit-btn" style="width:100%;margin-top:4px" onclick="submitFeedback()">Submit Feedback</button>
+        <div class="feedback-submitted hidden" id="feedback-submitted">Submitted</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ Classes view ══ -->
+<div id="view-classes" style="display:none; flex:1; overflow:auto; padding:20px; background:var(--bg0)">
+  <div style="max-width:1100px; margin:0 auto">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px">
+      <div>
+        <div id="kb-meta" style="font-size:12px; font-family:'IBM Plex Mono',monospace; color:var(--text3); margin-bottom:4px"></div>
+        <div style="font-size:18px; font-weight:600; color:var(--text0)" id="kb-title">Vehicle Classes</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-secondary btn-sm" onclick="setAllFields(true)">✓ Enable All Fields</button>
+        <button class="btn btn-secondary btn-sm" onclick="setAllFields(false)">✕ Disable All Fields</button>
+        <button class="btn btn-primary" onclick="openClassEditor(null)">+ Add Class</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-body" style="padding:0; overflow:auto">
+        <table class="classes-table">
+          <thead>
+            <tr>
+              <th>LABEL</th>
+              <th>YEARS</th>
+              <th>GEN CODE</th>
+              <th>FEATURES</th>
+              <th>INCLUDE IN PROMPT</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="classes-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="class-editor-panel" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Constants ──────────────────────────────────────────────────────────────
+const MODELS = [
+  {id:'gemini-flash-lite', name:'Gemini 2.5 Flash Lite', provider:'google',    meta:'best for bulk',        m:'gemini-2.5-flash-lite'},
+  {id:'gemini-25-flash',   name:'Gemini 2.5 Flash',      provider:'google',    meta:'best balance',          m:'gemini-2.5-flash'},
+  {id:'gemini-25-pro',     name:'Gemini 2.5 Pro',        provider:'google',    meta:'most accurate',         m:'gemini-2.5-pro'},
+  {id:'claude-haiku',      name:'Claude Haiku 4.5',       provider:'anthropic', meta:'$0.25 / 1M tokens',    m:'claude-haiku-4-5-20251001'},
+  {id:'claude-sonnet',     name:'Claude Sonnet 4',        provider:'anthropic', meta:'$3.00 / 1M tokens',    m:'claude-sonnet-4-20250514'},
+  {id:'gpt4o',             name:'GPT-4o',                 provider:'openai',    meta:'$2.50 / 1M tokens',    m:'gpt-4o'},
+  {id:'ollama',            name:'Ollama (local)',          provider:'ollama',    meta:'runs on your machine', m:'llava'},
+];
+
+const CONF = {
+  high:   { color: 'var(--green)', bg: 'var(--green-bg)' },
+  medium: { color: 'var(--amber)', bg: 'var(--amber-bg)' },
+  low:    { color: 'var(--red)',   bg: 'var(--red-bg)'   },
+};
+
+// ── State ──────────────────────────────────────────────────────────────────
+let prompts       = [];
+let currentPromptId = null;
+let selectedImage = null;       // { path, thumbUrl, name }
+let mode          = 'cold';
+let selectedModel = MODELS.find(m => m.id === 'gemini-25-flash');
+let sessionId     = null;
+let classes       = [];         // [{ id, label }]
+let lastResult    = null;       // last EvaluateResponse
+let feedbackChoice = null;      // 'correct' | 'wrong'
+let kbData        = null;       // vehicle_classes.json content
+let _classesLoaded = false;
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  buildModelSelect();
+  onModelChange();
+  await Promise.all([loadPrompts(), initSession(), loadClasses()]);
+  if (selectedModel.provider !== 'ollama') loadSavedApiKey(selectedModel.provider);
+});
+
+// ── Session init ───────────────────────────────────────────────────────────
+async function initSession() {
+  const data = await apiPost('/api/session/start', {});
+  sessionId = data.session_id;
+}
+
+async function loadClasses() {
+  try {
+    classes = await apiGet('/api/classes');
+    buildActualClassSelect();
+  } catch (e) { console.error('loadClasses:', e.message); }
+}
+
+function buildActualClassSelect() {
+  const sel = document.getElementById('actual-class-select');
+  sel.innerHTML = '<option value="">— choose class —</option>';
+  classes.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.label;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.source-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
+}
+
+// ── Model selector ─────────────────────────────────────────────────────────
+function buildModelSelect() {
+  const sel = document.getElementById('model-select');
+  const groups = {};
+  MODELS.forEach(m => { (groups[m.provider] = groups[m.provider] || []).push(m); });
+  Object.entries(groups).forEach(([provider, list]) => {
+    const og = document.createElement('optgroup');
+    og.label = provider[0].toUpperCase() + provider.slice(1);
+    list.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${m.name}  ·  ${m.meta}`;
+      if (m.id === selectedModel.id) opt.selected = true;
+      og.appendChild(opt);
+    });
+    sel.appendChild(og);
+  });
+}
+
+function onModelChange() {
+  selectedModel = MODELS.find(m => m.id === document.getElementById('model-select').value) || MODELS[0];
+  const isOllama = selectedModel.provider === 'ollama';
+  document.getElementById('apikey-field').classList.toggle('hidden', isOllama);
+  document.getElementById('ollama-field').classList.toggle('hidden', !isOllama);
+  if (!isOllama) {
+    const providerLabel = selectedModel.provider[0].toUpperCase() + selectedModel.provider.slice(1);
+    document.getElementById('apikey-label').childNodes[0].textContent = providerLabel + ' API KEY ';
+    loadSavedApiKey(selectedModel.provider);
+  }
+}
+
+async function loadSavedApiKey(provider) {
+  try {
+    const data = await apiGet(`/api/settings/key?provider=${encodeURIComponent(provider)}`);
+    const inp = document.getElementById('api-key');
+    const badge = document.getElementById('key-saved-badge');
+    const clearBtn = document.getElementById('clear-key-btn');
+    if (data.key) {
+      inp.value = data.key;
+      badge.classList.remove('hidden');
+      clearBtn.style.display = '';
+    } else {
+      inp.value = '';
+      badge.classList.add('hidden');
+      clearBtn.style.display = 'none';
+    }
+  } catch (e) { /* silently ignore */ }
+}
+
+async function saveApiKey() {
+  const key = document.getElementById('api-key').value.trim();
+  if (!key) { alert('Enter an API key first.'); return; }
+  try {
+    await apiPost('/api/settings/key', { provider: selectedModel.provider, api_key: key });
+    document.getElementById('key-saved-badge').classList.remove('hidden');
+    document.getElementById('clear-key-btn').style.display = '';
+  } catch (e) { alert('Failed to save key: ' + e.message); }
+}
+
+async function clearApiKey() {
+  if (!confirm('Remove saved key for ' + selectedModel.provider + '?')) return;
+  try {
+    await apiFetch(`/api/settings/key?provider=${encodeURIComponent(selectedModel.provider)}`, { method: 'DELETE' });
+    document.getElementById('api-key').value = '';
+    document.getElementById('key-saved-badge').classList.add('hidden');
+    document.getElementById('clear-key-btn').style.display = 'none';
+  } catch (e) { alert('Failed to clear key: ' + e.message); }
+}
+
+function toggleKeyVis() {
+  const inp = document.getElementById('api-key');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// ── Mode ───────────────────────────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.getElementById('mode-cold').classList.toggle('active', m === 'cold');
+  document.getElementById('mode-rag').classList.toggle('active',  m === 'rag');
+  const ragPanel = document.getElementById('rag-panel');
+  ragPanel.classList.toggle('hidden', m === 'cold');
+  if (m === 'rag') loadIndexStatus();
+}
+
+async function loadIndexStatus() {
+  const el = document.getElementById('index-status-line');
+  try {
+    const s = await apiGet('/api/index-status');
+    if (s.built && s.total_images > 0) {
+      const when = s.last_built ? new Date(s.last_built).toLocaleString() : 'unknown';
+      el.textContent = `✓ ${s.total_images} images indexed · ${when}`;
+      el.style.color = 'var(--green)';
+    } else {
+      el.textContent = 'No index built yet — enter dataset path and click Build';
+      el.style.color = 'var(--amber)';
+    }
+  } catch (e) {
+    el.textContent = 'Could not check index status';
+    el.style.color = 'var(--red)';
+  }
+}
+
+async function buildIndex() {
+  const path = document.getElementById('index-dataset-path').value.trim();
+  if (!path) { alert('Enter a dataset folder path.'); return; }
+  const btn = document.getElementById('index-build-btn');
+  const el  = document.getElementById('index-status-line');
+  btn.disabled = true; btn.textContent = '…';
+  el.textContent = 'Building index…'; el.style.color = 'var(--text3)';
+  try {
+    const r = await apiPost('/api/build-index', { dataset_path: path });
+    el.textContent = `✓ ${r.total_indexed} images indexed in ${r.time_seconds}s`;
+    el.style.color = 'var(--green)';
+    _inspectOpen = false;
+    document.getElementById('inspect-panel').style.display = 'none';
+    document.getElementById('inspect-toggle-btn').textContent = '▶ Inspect Index';
+  } catch (e) {
+    el.textContent = 'Build failed: ' + e.message;
+    el.style.color = 'var(--red)';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Build';
+  }
+}
+
+async function clearIndex() {
+  if (!confirm('Clear the entire index? This cannot be undone.')) return;
+  const btn = document.getElementById('index-clear-btn');
+  const el  = document.getElementById('index-status-line');
+  btn.disabled = true;
+  try {
+    await apiPost('/api/clear-index', {});
+    el.textContent = 'Index cleared'; el.style.color = 'var(--text3)';
+    _inspectOpen = false;
+    document.getElementById('inspect-panel').style.display = 'none';
+    document.getElementById('inspect-toggle-btn').textContent = '▶ Inspect Index';
+  } catch (e) {
+    el.textContent = 'Clear failed: ' + e.message; el.style.color = 'var(--red)';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+let _inspectOpen = false;
+
+async function toggleIndexInspect() {
+  _inspectOpen = !_inspectOpen;
+  const panel = document.getElementById('inspect-panel');
+  const btn   = document.getElementById('inspect-toggle-btn');
+  if (!_inspectOpen) {
+    panel.style.display = 'none';
+    btn.textContent = '▶ Inspect Index';
+    return;
+  }
+  btn.textContent = '▼ Inspect Index';
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="font-size:11px;color:var(--text3);font-family:\'IBM Plex Mono\',monospace">Loading…</div>';
+  try {
+    const data = await apiGet('/api/index-inspect');
+    renderIndexInspect(data, panel);
+  } catch (e) {
+    panel.innerHTML = `<div style="color:var(--red);font-size:11px">${esc(e.message)}</div>`;
+  }
+}
+
+function renderIndexInspect(data, panel) {
+  if (data.total === 0) {
+    panel.innerHTML = '<div style="font-size:11px;color:var(--text3);font-family:\'IBM Plex Mono\',monospace">Index is empty.</div>';
+    return;
+  }
+  let html = `<div style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text3);margin-bottom:6px">${data.total} images total</div>`;
+  for (const group of data.by_class) {
+    html += `<details style="margin-bottom:4px">
+      <summary style="cursor:pointer;font-size:11px;font-family:'IBM Plex Mono',monospace;padding:4px 0;display:flex;align-items:center;gap:6px;list-style:none">
+        <span style="flex:1;color:var(--text1);font-weight:500">${esc(group.class_id)}</span>
+        <span style="background:var(--bg3);border-radius:8px;padding:1px 6px;font-size:10px;color:var(--text3)">${group.count}</span>
+      </summary>
+      <div style="padding:4px 0 4px 8px;display:flex;flex-direction:column;gap:3px">
+        ${group.entries.map(e => `
+        <div style="display:flex;align-items:center;gap:6px">
+          <img src="/api/thumb?path=${encodeURIComponent(e.path)}" width="28" height="28"
+               style="object-fit:cover;border-radius:2px;border:1px solid var(--border);flex-shrink:0"
+               onerror="this.style.display='none'">
+          <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(e.filename)}</span>
+          <span style="font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--text3);background:var(--bg3);padding:1px 4px;border-radius:3px;flex-shrink:0">${esc(e.angle)}</span>
+        </div>`).join('')}
+      </div>
+    </details>`;
+  }
+  panel.innerHTML = html;
+}
+
+async function handleRagFolderPick(files) {
+  const images = Array.from(files).filter(f => /\.(jpe?g|png|webp|bmp|gif)$/i.test(f.name));
+  if (!images.length) { alert('No images found in the selected folder.'); return; }
+  const progress = document.getElementById('rag-upload-progress');
+  const buildBtn = document.getElementById('index-build-btn');
+  progress.style.display = 'block';
+  progress.textContent = `Uploading 0 / ${images.length}…`;
+  buildBtn.disabled = true;
+  const rootFolder = images[0].webkitRelativePath.split('/')[0];
+  let done = 0;
+  for (const f of images) {
+    try {
+      const fd = new FormData();
+      fd.append('file', f);
+      fd.append('rel_path', f.webkitRelativePath);
+      await fetch('/api/upload', { method: 'POST', body: fd });
+    } catch (e) { console.error('rag upload error:', e); }
+    done++;
+    progress.textContent = `Uploading ${done} / ${images.length}…`;
+  }
+  progress.textContent = `✓ ${done} images uploaded`;
+  setTimeout(() => { progress.style.display = 'none'; }, 3000);
+  document.getElementById('index-dataset-path').value = `data/uploads/${rootFolder}`;
+  buildBtn.disabled = false;
+}
+
+// ── Folder scan ────────────────────────────────────────────────────────────
+async function scanFolder() {
+  const path = document.getElementById('folder-path').value.trim();
+  if (!path) return;
+  const btn = document.getElementById('scan-btn');
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const data = await apiGet('/api/browse-tree?path=' + encodeURIComponent(path));
+    const counter = document.getElementById('img-count');
+    counter.textContent = `${data.total_images} image${data.total_images !== 1 ? 's' : ''} found`;
+    counter.classList.remove('hidden');
+    const container = document.getElementById('tree-container');
+    container.innerHTML = '';
+    container.appendChild(data.tree.length
+      ? buildTreeDOM(data.tree)
+      : Object.assign(document.createElement('div'), {
+          textContent: 'No images found',
+          style: 'padding:16px;color:var(--text3);font-size:12px;font-family:IBM Plex Mono,monospace'
+        }));
+  } catch (e) {
+    document.getElementById('tree-container').innerHTML =
+      `<div style="padding:12px;color:var(--red);font-size:12px">${esc(e.message)}</div>`;
+  } finally { btn.disabled = false; btn.textContent = 'Scan'; }
+}
+
+// ── Native folder picker ───────────────────────────────────────────────────
+function handleFolderPick(files) {
+  const images = Array.from(files).filter(f => /\.(jpe?g|png|webp|bmp|gif)$/i.test(f.name));
+  const counter = document.getElementById('img-count');
+  const container = document.getElementById('tree-container');
+  if (!images.length) {
+    counter.classList.add('hidden');
+    container.innerHTML = '<div style="padding:12px;color:var(--red);font-size:12px">No images found in selected folder</div>';
+    return;
+  }
+  const folderName = images[0].webkitRelativePath.split('/')[0];
+  document.getElementById('folder-path').value = folderName;
+  counter.textContent = `${images.length} image${images.length !== 1 ? 's' : ''} found`;
+  counter.classList.remove('hidden');
+  container.innerHTML = '';
+  container.appendChild(buildTreeFromFiles(images));
+}
+
+function buildTreeFromFiles(files) {
+  const root = { children: {}, files: [] };
+  for (const f of files) {
+    const parts = f.webkitRelativePath.split('/');
+    let node = root;
+    for (let i = 1; i < parts.length - 1; i++) {
+      if (!node.children[parts[i]]) node.children[parts[i]] = { children: {}, files: [] };
+      node = node.children[parts[i]];
+    }
+    node.files.push(f);
+  }
+  return renderFileTree(root);
+}
+
+function countFilesInNode(node) {
+  return node.files.length + Object.values(node.children).reduce((s, c) => s + countFilesInNode(c), 0);
+}
+
+function renderFileTree(node) {
+  const ul = document.createElement('ul');
+  ul.className = 'tree';
+  for (const [name, child] of Object.entries(node.children)) {
+    const li = document.createElement('li');
+    const row = document.createElement('div');
+    row.className = 'tree-folder-row';
+    row.innerHTML = `<span class="tree-arrow">▶</span><span style="font-size:13px">📁</span><span class="folder-name">${esc(name)}</span><span class="count-badge">${countFilesInNode(child)}</span>`;
+    const childDiv = document.createElement('div');
+    childDiv.className = 'tree-children';
+    childDiv.appendChild(renderFileTree(child));
+    row.addEventListener('click', () => {
+      const open = childDiv.classList.toggle('open');
+      row.querySelector('.tree-arrow').classList.toggle('open', open);
+    });
+    li.append(row, childDiv);
+    ul.appendChild(li);
+  }
+  for (const f of node.files) {
+    const li = document.createElement('li');
+    const row = document.createElement('div');
+    row.className = 'tree-image-row';
+    const thumb = document.createElement('img');
+    thumb.className = 'tree-thumb';
+    thumb.src = URL.createObjectURL(f);
+    thumb.alt = ''; thumb.loading = 'lazy';
+    const span = document.createElement('span');
+    span.className = 'tree-filename'; span.textContent = f.name;
+    row.append(thumb, span);
+    row.addEventListener('click', () => selectLocalFile(f, row));
+    li.appendChild(row);
+    ul.appendChild(li);
+  }
+  return ul;
+}
+
+let _localBlobUrl = null;
+
+async function selectLocalFile(file, rowEl) {
+  document.querySelectorAll('.tree-image-row.selected').forEach(r => r.classList.remove('selected'));
+  rowEl.classList.add('selected');
+  if (_localBlobUrl) { URL.revokeObjectURL(_localBlobUrl); _localBlobUrl = null; }
+  _localBlobUrl = URL.createObjectURL(file);
+  selectedImage = null;
+  const area = document.getElementById('preview-area');
+  area.innerHTML = '';
+  const img = document.createElement('img');
+  img.alt = file.name; img.src = _localBlobUrl;
+  area.appendChild(img);
+  document.getElementById('preview-filename').textContent = file.name;
+  clearResult(); hideFeedback();
+  try {
+    const fd = new FormData(); fd.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    selectedImage = { path: data.local_path, name: file.name, thumbUrl: _localBlobUrl };
+  } catch (e) { console.error('upload for local file failed:', e); }
+}
+
+// ── Tree ───────────────────────────────────────────────────────────────────
+function buildTreeDOM(nodes) {
+  const ul = document.createElement('ul');
+  ul.className = 'tree';
+  nodes.forEach(node => {
+    const li = document.createElement('li');
+    if (node.type === 'folder') {
+      const row = document.createElement('div');
+      row.className = 'tree-folder-row';
+      row.innerHTML = `<span class="tree-arrow">▶</span><span style="font-size:13px">📁</span><span class="folder-name">${esc(node.name)}</span><span class="count-badge">${node.image_count || 0}</span>`;
+      const children = document.createElement('div');
+      children.className = 'tree-children';
+      if (node.children && node.children.length) children.appendChild(buildTreeDOM(node.children));
+      row.addEventListener('click', () => {
+        const open = children.classList.toggle('open');
+        row.querySelector('.tree-arrow').classList.toggle('open', open);
+      });
+      li.append(row, children);
+    } else {
+      const row = document.createElement('div');
+      row.className = 'tree-image-row';
+      const img = document.createElement('img');
+      img.className = 'tree-thumb'; img.src = node.thumb_url; img.alt = ''; img.loading = 'lazy';
+      const span = document.createElement('span');
+      span.className = 'tree-filename'; span.textContent = node.name;
+      row.append(img, span);
+      row.addEventListener('click', () => selectImage(node, row));
+      li.appendChild(row);
+    }
+    ul.appendChild(li);
+  });
+  return ul;
+}
+
+function selectImage(node, rowEl) {
+  document.querySelectorAll('.tree-image-row.selected').forEach(r => r.classList.remove('selected'));
+  rowEl.classList.add('selected');
+  selectedImage = { path: node.path, thumbUrl: node.thumb_url, name: node.name };
+  const area = document.getElementById('preview-area');
+  area.innerHTML = '';
+  const img = document.createElement('img');
+  img.alt = node.name;
+  img.src = '/api/image?path=' + encodeURIComponent(node.path);
+  img.onerror = () => { img.src = node.thumb_url; };
+  area.appendChild(img);
+  document.getElementById('preview-filename').textContent = node.name;
+  clearResult();
+  hideFeedback();
+}
+
+// ── Prompts ────────────────────────────────────────────────────────────────
+async function loadPrompts() {
+  try {
+    prompts = await apiGet('/api/prompts');
+    renderPromptSelect();
+    const def = prompts.find(p => p.is_default) || prompts[0];
+    if (def) selectPrompt(def.id);
+  } catch (e) { console.error('loadPrompts:', e.message); }
+}
+
+function renderPromptSelect() {
+  const sel = document.getElementById('prompt-select');
+  const prev = parseInt(sel.value);
+  sel.innerHTML = '';
+  prompts.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name + (p.is_default ? ' ★' : '');
+    sel.appendChild(opt);
+  });
+  if (prev && prompts.find(p => p.id === prev)) sel.value = prev;
+}
+
+function onPromptSelect() { selectPrompt(parseInt(document.getElementById('prompt-select').value)); }
+
+function selectPrompt(id) {
+  const p = prompts.find(p => p.id === id);
+  if (!p) return;
+  currentPromptId = id;
+  document.getElementById('prompt-select').value = id;
+  document.getElementById('prompt-name').value = p.name;
+  document.getElementById('prompt-content').value = p.content;
+  document.getElementById('delete-prompt-btn').classList.toggle('hidden', prompts.length <= 1);
+}
+
+function newPrompt() {
+  currentPromptId = null;
+  document.getElementById('prompt-select').value = '';
+  document.getElementById('prompt-name').value = '';
+  document.getElementById('prompt-content').value = '';
+  document.getElementById('delete-prompt-btn').classList.remove('hidden');
+}
+
+async function savePrompt() {
+  const name = document.getElementById('prompt-name').value.trim();
+  const content = document.getElementById('prompt-content').value.trim();
+  if (!name || !content) { alert('Name and content required.'); return; }
+  try {
+    const saved = currentPromptId
+      ? await apiPut(`/api/prompts/${currentPromptId}`, { name, content })
+      : await apiPost('/api/prompts', { name, content, is_default: false });
+    await loadPrompts();
+    selectPrompt(saved.id);
+  } catch (e) { alert('Save failed: ' + e.message); }
+}
+
+async function deletePrompt() {
+  if (!currentPromptId || prompts.length <= 1 || !confirm('Delete this prompt?')) return;
+  const wasDefault = prompts.find(p => p.id === currentPromptId)?.is_default;
+  try {
+    await apiFetch(`/api/prompts/${currentPromptId}`, { method: 'DELETE' });
+    currentPromptId = null;
+    await loadPrompts();
+    const next = prompts.find(p => p.is_default) || prompts[0];
+    if (next) {
+      if (wasDefault) await apiPut(`/api/prompts/${next.id}`, { is_default: true });
+      selectPrompt(next.id);
+    }
+  } catch (e) { alert('Delete failed: ' + e.message); }
+}
+
+// ── Two-stage identification ───────────────────────────────────────────────
+let stage1Result = null;
+
+async function runStage1() {
+  if (!selectedImage) { alert('Select an image first.'); return; }
+  const apiKey = document.getElementById('api-key').value.trim();
+  const ollamaEndpoint = document.getElementById('ollama-endpoint').value.trim();
+  if (selectedModel.provider !== 'ollama' && !apiKey) { alert('Enter your API key.'); return; }
+
+  setAnalyzing(true, 'Identifying…');
+  document.getElementById('analyze-error').classList.add('hidden');
+  clearResult();
+
+  try {
+    stage1Result = await apiPost('/api/identify', {
+      image_path: selectedImage.path,
+      provider: selectedModel.provider,
+      model: selectedModel.m,
+      api_key: apiKey,
+      ollama_endpoint: ollamaEndpoint,
+    });
+    showStage1(stage1Result);
+  } catch (e) {
+    const err = document.getElementById('analyze-error');
+    err.textContent = e.message;
+    err.classList.remove('hidden');
+  } finally {
+    setAnalyzing(false);
+  }
+}
+
+function showStage1(r) {
+  const cs    = CONF[r.confidence] || CONF.low;
+  const score = Math.round((r.confidence_score || 0) * 100);
+  const dbBadge = r.in_database
+    ? `<div style="margin-top:10px;padding:6px 10px;background:var(--green-bg);border:1px solid #a0dbb8;border-radius:4px;font-size:12px;color:var(--green)">
+         ✓ In database — <strong>${esc(r.knowledge_base_label)}</strong>
+       </div>`
+    : `<div style="margin-top:10px;padding:6px 10px;background:var(--red-bg);border:1px solid #f0bfb0;border-radius:4px;font-size:12px;color:var(--red)">
+         ✕ Not in database — no classification available
+       </div>`;
+
+  document.getElementById('stage1-body').innerHTML = `
+    <div style="font-size:18px;font-weight:600;color:var(--text0)">${esc(r.make)} ${esc(r.model)}</div>
+    <div style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--text3);margin-bottom:8px">${esc(r.year_estimate)}</div>
+    <div class="conf-row" style="margin-bottom:8px">
+      <div class="conf-track"><div class="conf-fill" style="width:${score}%;background:${cs.color}"></div></div>
+      <span class="conf-chip" style="color:${cs.color};background:${cs.bg}">${esc(r.confidence)}</span>
+      <span class="conf-pct">${score}%</span>
+    </div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:4px">${esc(r.reasoning)}</div>
+    ${dbBadge}
+    ${r.in_database ? `<button class="analyze-btn" style="margin-top:10px" onclick="runStage2()">▶ Classify Generation</button>` : ''}`;
+
+  document.getElementById('stage1-panel').style.display = '';
+}
+
+async function runStage2() {
+  if (!stage1Result || !stage1Result.in_database) return;
+  const apiKey = document.getElementById('api-key').value.trim();
+  const ollamaEndpoint = document.getElementById('ollama-endpoint').value.trim();
+  const prompt = document.getElementById('prompt-content').value;
+  if (!prompt) { alert('Prompt is empty.'); return; }
+
+  const classifyBtn = document.querySelector('#stage1-body .analyze-btn');
+  if (classifyBtn) { classifyBtn.disabled = true; classifyBtn.innerHTML = '<span class="spinner"></span> Classifying…'; }
+
+  document.getElementById('analyze-error').classList.add('hidden');
+
+  try {
+    const result = await apiPost('/api/evaluate', {
+      image_path: selectedImage.path,
+      mode,
+      provider: selectedModel.provider,
+      model: selectedModel.m,
+      api_key: apiKey,
+      prompt,
+      ollama_endpoint: ollamaEndpoint,
+      knowledge_base_id: stage1Result.knowledge_base_id,
+    });
+    showResult(result);
+    showFeedback(result);
+  } catch (e) {
+    const err = document.getElementById('analyze-error');
+    err.textContent = e.message;
+    err.classList.remove('hidden');
+  } finally {
+    if (classifyBtn) { classifyBtn.disabled = false; classifyBtn.innerHTML = '▶ Classify Generation'; }
+  }
+}
+
+function setAnalyzing(on, label = 'Identifying…') {
+  const btn = document.getElementById('analyze-btn');
+  const lbl = document.getElementById('analyze-label');
+  btn.disabled = on;
+  lbl.innerHTML = on ? `<span class="spinner"></span> ${label}` : '▶ Identify Vehicle';
+}
+
+function showResult(r) {
+  document.getElementById('reasoning').value = r.reasoning || '';
+  const cs    = CONF[r.confidence] || CONF.low;
+  const score = Math.round((r.confidence_score || 0) * 100);
+  let html = `
+    <div class="result-class-id">${esc(r.class_id)}</div>
+    <div class="result-class-label">${esc(r.class_label)}</div>
+    <div class="conf-row">
+      <div class="conf-track"><div class="conf-fill" style="width:${score}%;background:${cs.color}"></div></div>
+      <span class="conf-chip" style="color:${cs.color};background:${cs.bg}">${esc(r.confidence)}</span>
+      <span class="conf-pct">${score}%</span>
+    </div>`;
+  if (r.visible_features && r.visible_features.length) {
+    html += `<div class="features-label">VISIBLE FEATURES</div><div class="features-list">`;
+    r.visible_features.forEach(f => { html += `<span class="feature-chip">${esc(f)}</span>`; });
+    html += `</div>`;
+  }
+  document.getElementById('result-body').innerHTML = html;
+  renderSimilarImages(r.similar_images || []);
+}
+
+function renderSimilarImages(images) {
+  const section = document.getElementById('similar-section');
+  const grid    = document.getElementById('similar-grid');
+  if (!images || images.length === 0) {
+    section.classList.add('hidden');
+    grid.innerHTML = '';
+    return;
+  }
+  grid.innerHTML = '';
+  images.forEach(s => {
+    const pct = Math.round(s.similarity_score * 100);
+    const badgeClass = pct >= 80 ? 'sim-good' : pct >= 60 ? 'sim-medium' : 'sim-bad';
+    const card = document.createElement('div');
+    card.className = 'sim-card';
+    card.title = `${s.class_id} · ${s.angle} · ${pct}%`;
+    card.innerHTML = `
+      <div class="sim-thumb-wrap">
+        <img src="${esc(s.thumb_url)}" alt="" loading="lazy">
+        <span class="sim-badge ${badgeClass}">${pct}%</span>
+      </div>
+      <div class="sim-label">${esc(s.class_id)}</div>`;
+    grid.appendChild(card);
+  });
+  section.classList.remove('hidden');
+}
+
+function clearResult() {
+  stage1Result = null;
+  document.getElementById('stage1-panel').style.display = 'none';
+  document.getElementById('stage1-body').innerHTML = '';
+  document.getElementById('reasoning').value = '';
+  document.getElementById('result-body').innerHTML = '<div class="result-empty">Identify a vehicle first, then classify.</div>';
+  document.getElementById('analyze-error').classList.add('hidden');
+  renderSimilarImages([]);
+}
+
+// ── Feedback ───────────────────────────────────────────────────────────────
+function showFeedback(result) {
+  lastResult   = result;
+  feedbackChoice = null;
+
+  document.getElementById('feedback-predicted').innerHTML =
+    `Predicted: <strong>${esc(result.class_id)}</strong><br>` +
+    `Confidence: ${esc(result.confidence)} (${Math.round((result.confidence_score||0)*100)}%)`;
+
+  // Reset state
+  document.getElementById('choice-correct').className = 'choice-btn';
+  document.getElementById('choice-wrong').className   = 'choice-btn';
+  document.getElementById('choice-btns').classList.remove('hidden');
+  document.getElementById('wrong-class-wrap').classList.add('hidden');
+  document.getElementById('actual-class-select').value = '';
+  document.getElementById('submit-btn').classList.add('hidden');
+  document.getElementById('feedback-submitted').classList.add('hidden');
+
+  document.getElementById('feedback-section').classList.remove('hidden');
+}
+
+function hideFeedback() {
+  document.getElementById('feedback-section').classList.add('hidden');
+  lastResult = null;
+  feedbackChoice = null;
+}
+
+function setFeedback(choice) {
+  feedbackChoice = choice;
+  document.getElementById('choice-correct').className = 'choice-btn' + (choice === 'correct' ? ' chosen-correct' : '');
+  document.getElementById('choice-wrong').className   = 'choice-btn' + (choice === 'wrong'   ? ' chosen-wrong'   : '');
+  document.getElementById('wrong-class-wrap').classList.toggle('hidden', choice !== 'wrong');
+  document.getElementById('submit-btn').classList.remove('hidden');
+}
+
+async function submitFeedback() {
+  if (!feedbackChoice || !lastResult || !selectedImage || !sessionId) return;
+
+  let actualClass;
+  if (feedbackChoice === 'correct') {
+    actualClass = lastResult.class_id;
+  } else {
+    actualClass = document.getElementById('actual-class-select').value;
+    if (!actualClass) { alert('Select the actual class.'); return; }
+  }
+
+  const correct = feedbackChoice === 'correct';
+  document.getElementById('submit-btn').disabled = true;
+
+  try {
+    const stats = await apiPost('/api/session/result', {
+      session_id:      sessionId,
+      image_path:      selectedImage.path,
+      image_filename:  selectedImage.name,
+      predicted_class: lastResult.class_id,
+      actual_class:    actualClass,
+      correct,
+      mode,
+      model_used:      selectedModel.m,
+      confidence_score: lastResult.confidence_score || 0,
+    });
+    updateSessionDisplay(stats);
+    // Lock feedback UI
+    document.getElementById('choice-btns').classList.add('hidden');
+    document.getElementById('wrong-class-wrap').classList.add('hidden');
+    document.getElementById('submit-btn').classList.add('hidden');
+    document.getElementById('feedback-submitted').classList.remove('hidden');
+  } catch (e) {
+    alert('Submit failed: ' + e.message);
+    document.getElementById('submit-btn').disabled = false;
+  }
+}
+
+// ── Session display ────────────────────────────────────────────────────────
+function updateSessionDisplay(stats) {
+  if (!stats || stats.total === 0) {
+    document.getElementById('accuracy-pct').textContent = '—';
+    document.getElementById('accuracy-pct').className = 'accuracy-big acc-none';
+    document.getElementById('sess-progress').style.width = '0%';
+    document.getElementById('sess-counts').textContent = 'No results yet';
+    document.getElementById('class-breakdown').classList.add('hidden');
+    return;
+  }
+
+  const pct = Math.round(stats.accuracy * 100);
+  const accEl = document.getElementById('accuracy-pct');
+  accEl.textContent = pct + '%';
+  accEl.className = 'accuracy-big ' + (pct >= 80 ? 'acc-good' : pct >= 50 ? 'acc-medium' : 'acc-bad');
+
+  const progColor = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+  const prog = document.getElementById('sess-progress');
+  prog.style.width = pct + '%';
+  prog.style.background = progColor;
+
+  document.getElementById('sess-counts').textContent =
+    `${stats.total} total · ${stats.correct} correct`;
+
+  if (stats.by_class && stats.by_class.length) {
+    const table = document.getElementById('class-table');
+    table.innerHTML = '';
+    stats.by_class.forEach(cls => {
+      const cp = Math.round(cls.accuracy * 100);
+      const cc = cp >= 80 ? 'var(--green)' : cp >= 50 ? 'var(--amber)' : 'var(--red)';
+      const label = cls.class_label.replace(/ \(\d{4}[^)]*\)/, ''); // strip year range for brevity
+      const row = document.createElement('div');
+      row.className = 'class-row';
+      row.innerHTML = `
+        <span class="class-name" title="${esc(cls.class_label)}">${esc(label)}</span>
+        <span class="class-n">${cls.total}</span>
+        <div class="class-bar-wrap">
+          <div class="class-bar-track"><div class="class-bar-fill" style="width:${cp}%;background:${cc}"></div></div>
+          <span class="class-pct">${cp}%</span>
+        </div>`;
+      table.appendChild(row);
+    });
+    document.getElementById('class-breakdown').classList.remove('hidden');
+  }
+}
+
+async function exportCsv() {
+  if (!sessionId) return;
+  window.location = `/api/session/export?session_id=${encodeURIComponent(sessionId)}`;
+}
+
+async function resetSession() {
+  if (!sessionId || !confirm('Reset session? All results will be cleared.')) return;
+  try {
+    await apiFetch(`/api/session?session_id=${encodeURIComponent(sessionId)}`, { method: 'DELETE' });
+    updateSessionDisplay(null);
+    hideFeedback();
+    // Start fresh session ID so old data doesn't leak back
+    const data = await apiPost('/api/session/start', {});
+    sessionId = data.session_id;
+  } catch (e) { alert('Reset failed: ' + e.message); }
+}
+
+// ── Drop tab ───────────────────────────────────────────────────────────────
+function dropDragOver(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.add('drag-over');
+}
+function dropDragLeave(e) {
+  document.getElementById('drop-zone').classList.remove('drag-over');
+}
+function dropHandleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) dropHandleFile(file);
+}
+
+async function dropHandleFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    alert('Please drop an image file (JPG, PNG, WebP, BMP).');
+    return;
+  }
+  const objectUrl = URL.createObjectURL(file);
+  document.getElementById('drop-zone').classList.add('hidden');
+  document.getElementById('drop-loaded').classList.remove('hidden');
+  document.getElementById('drop-preview-img').src = objectUrl;
+  document.getElementById('drop-filename').textContent = file.name;
+
+  // Show in main preview immediately
+  const area = document.getElementById('preview-area');
+  area.innerHTML = '';
+  const img = document.createElement('img');
+  img.alt = file.name;
+  img.src = objectUrl;
+  area.appendChild(img);
+  document.getElementById('preview-filename').textContent = file.name;
+  clearResult(); hideFeedback();
+  selectedImage = null;
+
+  // Upload to backend
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const resp = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await resp.json().catch(() => ({ detail: resp.statusText }));
+    if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+    selectedImage = { path: data.local_path, thumbUrl: objectUrl, name: file.name };
+  } catch (e) {
+    alert('Upload failed: ' + e.message);
+  }
+}
+
+function dropReset() {
+  document.getElementById('drop-zone').classList.remove('hidden');
+  document.getElementById('drop-loaded').classList.add('hidden');
+  document.getElementById('drop-file-input').value = '';
+  selectedImage = null;
+  clearResult(); hideFeedback();
+  document.getElementById('preview-area').innerHTML = '<span class="preview-empty">No image selected</span>';
+  document.getElementById('preview-filename').textContent = '';
+}
+
+// ── URL tab ────────────────────────────────────────────────────────────────
+async function fetchImageUrl() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) return;
+  const btn  = document.getElementById('url-load-btn');
+  const errEl = document.getElementById('url-error');
+  btn.disabled = true; btn.textContent = '…';
+  errEl.classList.add('hidden');
+
+  try {
+    const data = await apiPost('/api/fetch-url', { url });
+    const thumbUrl = '/api/image?path=' + encodeURIComponent(data.local_path);
+
+    // Show in main preview
+    const area = document.getElementById('preview-area');
+    area.innerHTML = '';
+    const img = document.createElement('img');
+    img.alt = data.filename; img.src = thumbUrl;
+    area.appendChild(img);
+    document.getElementById('preview-filename').textContent = data.filename;
+    clearResult(); hideFeedback();
+    selectedImage = { path: data.local_path, thumbUrl, name: data.filename };
+
+    // Hide placeholder
+    document.getElementById('url-placeholder').classList.add('hidden');
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Load';
+  }
+}
+
+// ── Google Drive ───────────────────────────────────────────────────────────
+function toggleDriveKeyVis() {
+  const inp = document.getElementById('drive-api-key');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function _driveApiKey() {
+  return document.getElementById('drive-api-key').value.trim();
+}
+
+async function driveBrowse() {
+  const apiKey = _driveApiKey();
+  const url    = document.getElementById('drive-folder-url').value.trim();
+  if (!apiKey) { alert('Paste your Google Drive API key first.'); return; }
+  if (!url)    { alert('Enter a Drive folder URL.'); return; }
+
+  const m = url.match(/folders\/([a-zA-Z0-9_-]+)/);
+  if (!m) { alert('Could not extract folder ID from URL.'); return; }
+  const folderId = m[1];
+
+  const btn = document.getElementById('drive-browse-btn');
+  btn.disabled = true; btn.textContent = '…';
+  document.getElementById('drive-list').innerHTML = '';
+
+  try {
+    const params = new URLSearchParams({
+      q:        `'${folderId}' in parents and mimeType contains 'image/' and trashed=false`,
+      key:      apiKey,
+      fields:   'files(id,name,mimeType)',
+      pageSize: '200',
+      orderBy:  'name',
+    });
+    const resp = await fetch(`https://www.googleapis.com/drive/v3/files?${params}`);
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error?.message || `Drive API error ${resp.status}`);
+
+    const files = data.files || [];
+    const counter = document.getElementById('drive-img-count');
+    counter.textContent = `${files.length} image${files.length !== 1 ? 's' : ''} found`;
+    counter.classList.remove('hidden');
+    renderDriveList(files);
+  } catch (e) {
+    document.getElementById('drive-list').innerHTML =
+      `<div style="padding:12px;color:var(--red);font-size:12px">${esc(e.message)}</div>`;
+  } finally { btn.disabled = false; btn.textContent = 'Browse'; }
+}
+
+function renderDriveList(files) {
+  const container = document.getElementById('drive-list');
+  container.innerHTML = '';
+  if (!files.length) {
+    container.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:12px;font-family:IBM Plex Mono,monospace">No images found</div>';
+    return;
+  }
+  const apiKey = _driveApiKey();
+  const ul = document.createElement('ul');
+  ul.className = 'tree';
+  files.forEach(f => {
+    const li = document.createElement('li');
+    const row = document.createElement('div');
+    row.className = 'tree-image-row';
+    const img = document.createElement('img');
+    img.className = 'tree-thumb';
+    img.src = `https://drive.google.com/thumbnail?id=${encodeURIComponent(f.id)}&sz=w80`;
+    img.alt = ''; img.loading = 'lazy';
+    const span = document.createElement('span');
+    span.className = 'tree-filename'; span.textContent = f.name;
+    row.append(img, span);
+    row.addEventListener('click', () => selectDriveImage(f, row, apiKey));
+    li.appendChild(row);
+    ul.appendChild(li);
+  });
+  container.appendChild(ul);
+}
+
+async function selectDriveImage(file, rowEl, apiKey) {
+  document.querySelectorAll('.tree-image-row.selected').forEach(r => r.classList.remove('selected'));
+  rowEl.classList.add('selected');
+
+  const proxyUrl = `/api/drive/image?file_id=${encodeURIComponent(file.id)}&api_key=${encodeURIComponent(apiKey)}`;
+  const area = document.getElementById('preview-area');
+  area.innerHTML = '';
+  const img = document.createElement('img');
+  img.alt = file.name; img.src = proxyUrl;
+  area.appendChild(img);
+  document.getElementById('preview-filename').textContent = file.name;
+  clearResult(); hideFeedback();
+  selectedImage = null;
+
+  try {
+    const cacheUrl = `/api/drive/cache?file_id=${encodeURIComponent(file.id)}&api_key=${encodeURIComponent(apiKey)}&mime=${encodeURIComponent(file.mimeType || 'image/jpeg')}`;
+    const data = await apiGet(cacheUrl);
+    selectedImage = { path: data.local_path, thumbUrl: proxyUrl, name: file.name };
+  } catch (e) {
+    alert('Failed to cache Drive image for analysis: ' + e.message);
+  }
+}
+
+// ── API helpers ────────────────────────────────────────────────────────────
+async function apiFetch(url, opts = {}) {
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    ...opts,
+  });
+  const data = await res.json().catch(() => ({ detail: res.statusText }));
+  if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+  return data;
+}
+const apiGet  = url       => apiFetch(url, { method: 'GET' });
+const apiPost = (url, b)  => apiFetch(url, { method: 'POST', body: JSON.stringify(b) });
+const apiPut  = (url, b)  => apiFetch(url, { method: 'PUT',  body: JSON.stringify(b) });
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── View switching ─────────────────────────────────────────────────────────
+function switchView(v) {
+  document.getElementById('view-evaluate').style.display = v === 'evaluate' ? 'flex' : 'none';
+  document.getElementById('view-classes').style.display  = v === 'classes'  ? 'flex' : 'none';
+  document.getElementById('nav-evaluate').classList.toggle('active', v === 'evaluate');
+  document.getElementById('nav-classes').classList.toggle('active',  v === 'classes');
+  if (v === 'classes' && !_classesLoaded) loadVehicleClasses();
+}
+
+// ── Vehicle classes KB editor ──────────────────────────────────────────────
+async function loadVehicleClasses() {
+  try {
+    kbData = await apiGet('/api/vehicle-classes');
+    _classesLoaded = true;
+    document.getElementById('kb-title').textContent = kbData.vehicle || 'Vehicle Classes';
+    document.getElementById('kb-meta').textContent =
+      (kbData.market ? kbData.market + ' market · ' : '') + (kbData.classes?.length || 0) + ' classes';
+    renderClassesTable();
+  } catch (e) {
+    document.getElementById('classes-tbody').innerHTML =
+      `<tr><td colspan="5" style="color:var(--red);padding:16px">${esc(e.message)}</td></tr>`;
+  }
+}
+
+function renderClassesTable() {
+  const tbody = document.getElementById('classes-tbody');
+  if (!kbData || !kbData.classes.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text3);padding:16px;font-family:\'IBM Plex Mono\',monospace;font-size:12px">No classes defined.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = kbData.classes.map(cls => `
+    <tr>
+      <td><div style="font-weight:500">${esc(cls.label)}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-top:2px">${esc(cls.id)}</div></td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;white-space:nowrap">${esc(cls.years || '—')}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px">${esc(cls.generation_code || '—')}</td>
+      <td style="font-size:12px;color:var(--text2)">${(cls.key_visual_features || []).length} features</td>
+      <td style="white-space:nowrap">
+        <button class="tog-btn ${cls.key_visual_features_enabled !== false ? 'tog-on' : 'tog-off'}"
+                onclick="toggleClassField('${cls.id}', 'key_visual_features_enabled')" title="Key Visual Features">KVF</button>
+        <button class="tog-btn ${cls.rear_features_enabled !== false ? 'tog-on' : 'tog-off'}"
+                onclick="toggleClassField('${cls.id}', 'rear_features_enabled')" title="Rear Features">Rear</button>
+        <button class="tog-btn ${cls.side_features_enabled !== false ? 'tog-on' : 'tog-off'}"
+                onclick="toggleClassField('${cls.id}', 'side_features_enabled')" title="Side Features">Side</button>
+        <button class="tog-btn ${cls.distinguishing_tips_enabled !== false ? 'tog-on' : 'tog-off'}"
+                onclick="toggleClassField('${cls.id}', 'distinguishing_tips_enabled')" title="Distinguishing Tips">Tips</button>
+        <button class="tog-btn ${cls.common_confusables_enabled !== false ? 'tog-on' : 'tog-off'}"
+                onclick="toggleClassField('${cls.id}', 'common_confusables_enabled')" title="Common Confusables">Conf</button>
+      </td>
+      <td style="white-space:nowrap;text-align:right">
+        <button class="btn btn-ghost btn-sm" onclick="openClassEditor('${cls.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red);margin-left:4px" onclick="deleteClass('${cls.id}')">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+let _editingClassId = null;
+
+function openClassEditor(classId) {
+  _editingClassId = classId;
+  const cls = classId ? kbData.classes.find(c => c.id === classId) : null;
+  const panel = document.getElementById('class-editor-panel');
+  const isNew = !cls;
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div class="class-editor">
+      <h3>${isNew ? 'NEW CLASS' : 'EDIT CLASS'}</h3>
+      <div class="editor-grid">
+        <div class="editor-field">
+          <label>CLASS ID</label>
+          <input type="text" id="ed-id" value="${isNew ? '' : esc(cls.id)}" ${isNew ? '' : 'disabled'} placeholder="e.g. t6_px_mk1_2011_2015">
+        </div>
+        <div class="editor-field">
+          <label>LABEL</label>
+          <input type="text" id="ed-label" value="${isNew ? '' : esc(cls.label)}" placeholder="e.g. T6 PX Mk1 (2011–2015)">
+        </div>
+        <div class="editor-field">
+          <label>YEARS</label>
+          <input type="text" id="ed-years" value="${isNew ? '' : esc(cls.years || '')}" placeholder="e.g. 2011-2015">
+        </div>
+        <div class="editor-field">
+          <label>GENERATION CODE</label>
+          <input type="text" id="ed-gen" value="${isNew ? '' : esc(cls.generation_code || '')}" placeholder="e.g. T6 PX">
+        </div>
+        <div class="editor-field editor-full">
+          <label>KEY VISUAL FEATURES (one per line)</label>
+          <textarea id="ed-kvf" rows="5">${isNew ? '' : (cls.key_visual_features || []).join('\n')}</textarea>
+        </div>
+        <div class="editor-field">
+          <label>REAR FEATURES (one per line)</label>
+          <textarea id="ed-rear" rows="4">${isNew ? '' : (cls.rear_features || []).join('\n')}</textarea>
+        </div>
+        <div class="editor-field">
+          <label>SIDE FEATURES (one per line)</label>
+          <textarea id="ed-side" rows="4">${isNew ? '' : (cls.side_features || []).join('\n')}</textarea>
+        </div>
+        <div class="editor-field editor-full">
+          <label>DISTINGUISHING TIPS</label>
+          <textarea id="ed-tips" rows="3">${isNew ? '' : esc(cls.distinguishing_tips || '')}</textarea>
+        </div>
+        <div class="editor-field editor-full">
+          <label>COMMON CONFUSABLES (comma-separated class IDs)</label>
+          <input type="text" id="ed-conf" value="${isNew ? '' : esc((cls.common_confusables || []).join(', '))}" placeholder="e.g. class_id_a, class_id_b">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-primary" onclick="saveClass()">Save</button>
+        <button class="btn btn-ghost" onclick="closeClassEditor()">Cancel</button>
+      </div>
+      <div id="editor-error" class="error-banner hidden" style="margin-top:8px"></div>
+    </div>`;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeClassEditor() {
+  document.getElementById('class-editor-panel').style.display = 'none';
+  _editingClassId = null;
+}
+
+function _lines(id) {
+  return document.getElementById(id).value.split('\n').map(s => s.trim()).filter(Boolean);
+}
+
+async function saveClass() {
+  const id = _editingClassId
+    ? _editingClassId
+    : document.getElementById('ed-id').value.trim();
+  if (!id) { document.getElementById('editor-error').textContent = 'Class ID is required.'; document.getElementById('editor-error').classList.remove('hidden'); return; }
+
+  const body = {
+    id,
+    label:               document.getElementById('ed-label').value.trim(),
+    years:               document.getElementById('ed-years').value.trim(),
+    generation_code:     document.getElementById('ed-gen').value.trim(),
+    key_visual_features: _lines('ed-kvf'),
+    rear_features:       _lines('ed-rear'),
+    side_features:       _lines('ed-side'),
+    distinguishing_tips: document.getElementById('ed-tips').value.trim(),
+    common_confusables:  document.getElementById('ed-conf').value.split(',').map(s => s.trim()).filter(Boolean),
+  };
+
+  try {
+    if (_editingClassId) {
+      await apiPut(`/api/vehicle-classes/${encodeURIComponent(_editingClassId)}`, body);
+    } else {
+      await apiPost('/api/vehicle-classes', body);
+    }
+    closeClassEditor();
+    _classesLoaded = false;
+    await loadVehicleClasses();
+  } catch (e) {
+    const err = document.getElementById('editor-error');
+    err.textContent = e.message;
+    err.classList.remove('hidden');
+  }
+}
+
+async function setAllFields(enabled) {
+  if (!kbData) return;
+  const fields = ['key_visual_features_enabled', 'rear_features_enabled', 'side_features_enabled',
+                  'distinguishing_tips_enabled', 'common_confusables_enabled'];
+  for (const cls of kbData.classes) {
+    fields.forEach(f => cls[f] = enabled);
+    await apiPut(`/api/vehicle-classes/${encodeURIComponent(cls.id)}`, cls);
+  }
+  renderClassesTable();
+}
+
+async function toggleClassField(classId, field) {
+  const cls = kbData.classes.find(c => c.id === classId);
+  if (!cls) return;
+  const prev = cls[field] !== false;
+  cls[field] = !prev;
+  try {
+    await apiPut(`/api/vehicle-classes/${encodeURIComponent(classId)}`, cls);
+    renderClassesTable();
+  } catch (e) {
+    cls[field] = prev;
+    alert('Failed to update: ' + e.message);
+  }
+}
+
+async function deleteClass(classId) {
+  if (!confirm(`Delete class "${classId}"? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/api/vehicle-classes/${encodeURIComponent(classId)}`, { method: 'DELETE' });
+    _classesLoaded = false;
+    await loadVehicleClasses();
+    if (_editingClassId === classId) closeClassEditor();
+  } catch (e) { alert('Delete failed: ' + e.message); }
+}
+</script>
+</body>
+</html>

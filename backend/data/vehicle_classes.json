@@ -1,0 +1,171 @@
+{
+  "vehicle": "Ford Ranger",
+  "market": "Australia",
+  "classes": [
+    {
+      "id": "t6_px_mk1_2011_2015",
+      "label": "T6 PX Mk1 (2011\u20132015)",
+      "years": "2011-2015",
+      "generation_code": "T6 PX",
+      "key_visual_features": [
+        "Trapezoidal headlights with chrome inner surround",
+        "Single horizontal chrome bar across grille",
+        "More upright, narrower front fascia compared to Mk2",
+        "Round or oval fog light housings in lower bumper",
+        "Flat bonnet with minimal character lines",
+        "Smaller overall grille opening"
+      ],
+      "rear_features": [
+        "RANGER lettering across tailgate in chrome",
+        "Simpler tail light cluster without LED elements",
+        "Ford oval badge centred on tailgate"
+      ],
+      "side_features": [
+        "Flatter door panels with minimal sculpting",
+        "Smaller side mirrors compared to later models"
+      ],
+      "distinguishing_tips": "Mk1 has a more conservative, upright grille. The headlight shape is trapezoidal with a notable chrome inner surround. The overall front end looks narrower and taller than the Mk2/3.",
+      "common_confusables": [
+        "t6_px_mk2_mk3_2015_2022_old_shape_mainstream"
+      ],
+      "key_visual_features_enabled": true,
+      "rear_features_enabled": true,
+      "side_features_enabled": true,
+      "distinguishing_tips_enabled": true,
+      "common_confusables_enabled": true
+    },
+    {
+      "id": "t6_px_mk2_mk3_2015_2022_old_shape_mainstream",
+      "label": "T6 PX Mk2/Mk3 Mainstream (2015\u20132022)",
+      "years": "2015-2022",
+      "generation_code": "T6 PX Mk2/Mk3",
+      "key_visual_features": [
+        "Revised wider and more aggressive grille opening",
+        "Updated headlights with revised inner graphics (not trapezoidal)",
+        "More pronounced bonnet creases and character lines",
+        "Wider lower bumper with horizontal split",
+        "Revised fog light position and housing shape",
+        "Overall wider, lower stance than Mk1"
+      ],
+      "rear_features": [
+        "Updated tail light cluster with different graphics to Mk1",
+        "RANGER lettering across tailgate",
+        "Similar tailgate layout but with revised proportions"
+      ],
+      "side_features": [
+        "More sculpted door panels",
+        "Larger side mirrors",
+        "Subtle body crease running front to rear"
+      ],
+      "distinguishing_tips": "Mk2/3 mainstream has a wider, more aggressive look than Mk1 but lacks the flared arches and RAPTOR badging of the Raptor. Check the grille width and headlight shape \u2014 wider and more dynamic than Mk1.",
+      "common_confusables": [
+        "t6_px_mk1_2011_2015",
+        "t6_px_mk3_raptor_2018_2022"
+      ],
+      "key_visual_features_enabled": true,
+      "rear_features_enabled": true,
+      "side_features_enabled": true,
+      "distinguishing_tips_enabled": true,
+      "common_confusables_enabled": true
+    },
+    {
+      "id": "t6_px_mk3_raptor_2018_2022",
+      "label": "T6 PX Mk3 Raptor (2018\u20132022)",
+      "years": "2018-2022",
+      "generation_code": "T6 PX Mk3 Raptor",
+      "key_visual_features": [
+        "RAPTOR lettering across centre of grille (most distinctive feature)",
+        "Honeycomb mesh grille pattern \u2014 no horizontal bar",
+        "Dramatically flared wheel arches (wider body)",
+        "Skid plate integrated into front bumper",
+        "Recovery points visible on front bumper",
+        "Wider overall stance than mainstream Mk3"
+      ],
+      "rear_features": [
+        "RAPTOR lettering across tailgate in large block letters",
+        "Same tail light cluster as Mk3 mainstream but wider body",
+        "Rear recovery hooks visible"
+      ],
+      "side_features": [
+        "Flared wheel arch extensions \u2014 most visible distinguishing feature from side",
+        "Raptor decals on doors (some variants)",
+        "Wider track visibly evident from side"
+      ],
+      "distinguishing_tips": "The Raptor is unmistakable from the front due to RAPTOR lettering and honeycomb grille. From the side the flared arches are the giveaway. Never confuse with mainstream Mk3 \u2014 the body is visibly wider.",
+      "common_confusables": [
+        "t6_px_mk2_mk3_2015_2022_old_shape_mainstream"
+      ],
+      "key_visual_features_enabled": true,
+      "rear_features_enabled": true,
+      "side_features_enabled": true,
+      "distinguishing_tips_enabled": true,
+      "common_confusables_enabled": true
+    },
+    {
+      "id": "next_gen_py_ra_2022_present_mainstream",
+      "label": "Next Gen PY/RA Mainstream (2022\u2013present)",
+      "years": "2022-present",
+      "generation_code": "Next Gen PY/RA",
+      "key_visual_features": [
+        "Completely new body style \u2014 not an evolution of T6",
+        "C-shaped LED daytime running lights",
+        "Wide horizontal grille with thick upper bar",
+        "More upright windscreen and squarer cab shape",
+        "RANGER lettering across grille (not ford oval centre)",
+        "Wider front end with more aggressive proportions than old shape"
+      ],
+      "rear_features": [
+        "Full-width LED tail light bar connecting both sides",
+        "RANGER lettering across tailgate in large block letters",
+        "Cleaner more modern tailgate design"
+      ],
+      "side_features": [
+        "More upright A-pillar and squarer greenhouse",
+        "Larger door glass area",
+        "Different body crease pattern to T6"
+      ],
+      "distinguishing_tips": "Next Gen mainstream is unmistakably different from the old T6 shape. The C-shaped DRLs are the quickest identifier. Distinguished from Next Gen Raptor by absence of flared arches and RAPTOR badging.",
+      "common_confusables": [
+        "next_gen_py_ra_raptor_2022_present"
+      ],
+      "key_visual_features_enabled": true,
+      "rear_features_enabled": true,
+      "side_features_enabled": true,
+      "distinguishing_tips_enabled": true,
+      "common_confusables_enabled": true
+    },
+    {
+      "id": "next_gen_py_ra_raptor_2022_present",
+      "label": "Next Gen PY/RA Raptor (2022\u2013present)",
+      "years": "2022-present",
+      "generation_code": "Next Gen PY/RA Raptor",
+      "key_visual_features": [
+        "RAPTOR lettering across front grille",
+        "Honeycomb grille mesh \u2014 no horizontal bar",
+        "Flared wheel arches (wider than Next Gen mainstream)",
+        "More aggressive bumper with integrated skid plate",
+        "Wider overall stance than mainstream Next Gen",
+        "C-shaped LED DRLs present but in wider front end"
+      ],
+      "rear_features": [
+        "RAPTOR lettering across tailgate",
+        "Full-width LED tail light bar same as mainstream",
+        "Wider body visible from rear"
+      ],
+      "side_features": [
+        "Flared arch extensions \u2014 distinguishes from mainstream Next Gen",
+        "Wider track",
+        "Raptor badging on sides"
+      ],
+      "distinguishing_tips": "Same as T6 Raptor rule \u2014 look for RAPTOR lettering and flared arches. The Next Gen Raptor is wider than the Next Gen mainstream. From the front the grille is honeycomb mesh not horizontal bar.",
+      "common_confusables": [
+        "next_gen_py_ra_2022_present_mainstream"
+      ],
+      "key_visual_features_enabled": true,
+      "rear_features_enabled": true,
+      "side_features_enabled": true,
+      "distinguishing_tips_enabled": true,
+      "common_confusables_enabled": true
+    }
+  ]
+}
